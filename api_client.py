@@ -1,9 +1,9 @@
 """
-Timerror.py
+api_client.py
 
 统一管理：调用 API 时的错误码处理、错误信息提取、超时识别、API_KEY 池轮换与智能重试。
 
-目标：其他脚本只需要 `from Timerror import make_chat_completion`，
+目标：其他脚本只需要 `from api_client import make_chat_completion`，
 并用工厂函数生成 `chat_completion`，从而做到只修改本文件即可全局生效。
 
 === 关键设计说明（为什么这样做）===
@@ -392,7 +392,7 @@ def create_openai_client_factory_no_retry():
     【关键】必须设置 max_retries=0 关闭 SDK 自动重试，否则：
     - SDK 默认会重试 2 次
     - 每次重试都有 timeout
-    - 外层 Timerror.py 再重试 5 次
+    - 外层 api_client.py 再重试 5 次
     - 总耗时可能达到 120s * 3 * 5 = 1800s
     
     【关键】使用 httpx.Timeout 细粒度配置：
@@ -684,7 +684,18 @@ def make_chat_completion(
                             f"API_KEY[{idx}|{key_tag}] 发起请求：attempt={attempt_no}/{cfg.max_retries}, dyn_timeout={dyn_timeout}s, max_tokens={max_tokens}, input_chars={input_chars}, est_tokens={est_tokens}",
                         )
                         
-                        resp = cli.chat.completions.create(messages=messages, **kwargs)
+                        # 针对推理模型（如 qwen3 系列，由 SGLang 提供）：
+                        # 关闭 thinking，避免推理过程挤占 max_tokens 预算导致 JSON 被截断，
+                        # 同时显著加快出结果。通过环境变量 DISABLE_THINKING 开启（默认关闭，不影响其他配置）。
+                        call_kwargs = dict(kwargs)
+                        if os.environ.get("DISABLE_THINKING", "").strip().lower() in ("1", "true", "yes"):
+                            extra = dict(call_kwargs.get("extra_body") or {})
+                            ctk = dict(extra.get("chat_template_kwargs") or {})
+                            ctk.setdefault("enable_thinking", False)
+                            extra["chat_template_kwargs"] = ctk
+                            call_kwargs["extra_body"] = extra
+
+                        resp = cli.chat.completions.create(messages=messages, **call_kwargs)
                         
                         elapsed = time.time() - start_ts
                         

@@ -1,0 +1,14 @@
+[project]
+name = "novel-digest"
+version = "0.1.0"
+description = "Multi-stage novel scanning and analysis pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai",
+    "httpx",
+    "tqdm",
+]
+
+[tool.uv]
+package = false

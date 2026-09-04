@@ -15,7 +15,7 @@ except Exception:
 from tqdm import tqdm
 import concurrent.futures
 import threading
-from Timerror import make_chat_completion
+from api_client import make_chat_completion
 from token_tracker import create_default_tracker
 from shared_utils import get_base_dir, read_file_safely
 
@@ -78,7 +78,7 @@ def get_latest_report_files(prefix: str = None):
     report_files = progress.get("report_files", {}) if isinstance(progress, dict) else {}
     return dict(report_files or {})
 
-# ---- API 调用封装：统一收敛到 Timerror.py（只需修改 Timerror.py 即可全局生效）----
+# ---- API 调用封装：统一收敛到 api_client.py（只需修改 api_client.py 即可全局生效）----
 MAX_403_RETRIES = 3
 MAX_TIMEOUT_RETRIES = 5  # 连续超时 3 次则标记 key 不可用
 REQUEST_TIMEOUT = 150  # 请求超时时间（秒）
@@ -89,7 +89,7 @@ def _openai_client_factory(api_key: str, base_url: str, timeout: int):
     
     【关键】max_retries=0 关闭 SDK 自动重试：
     - SDK 默认会重试 2 次，每次都有 timeout
-    - 外层 Timerror.py 再重试 5 次
+    - 外层 api_client.py 再重试 5 次
     - 不关闭的话，总耗时可能达到 120s * 3 * 5 = 1800s
     
     【关键】使用 httpx.Timeout 细粒度配置：

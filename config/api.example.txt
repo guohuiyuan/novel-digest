@@ -1,0 +1,3 @@
+# One API key per line. Copy this file to config/api.txt and fill in your keys.
+sk-your-key-1
+sk-your-key-2

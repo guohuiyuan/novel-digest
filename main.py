@@ -88,7 +88,7 @@ def load_configs(base_dir):
     for key, default_value in _DEFAULT_ENV_SETTINGS.items():
         os.environ.setdefault(key, default_value)
 
-    setting_file = os.path.join(base_dir, "setting.txt")
+    setting_file = os.path.join(base_dir, "config", "setting.txt")
     if os.path.exists(setting_file):
         text = _read_file_safely(setting_file)
         for line in text.splitlines():
@@ -105,7 +105,7 @@ def load_configs(base_dir):
             elif key in _VALIDATED_NON_NEGATIVE_FLOAT_KEYS:
                 _set_non_negative_float_env(key, value, _VALIDATED_NON_NEGATIVE_FLOAT_KEYS[key])
 
-    api_file = os.path.join(base_dir, "api.txt")
+    api_file = os.path.join(base_dir, "config", "api.txt")
     if not os.path.exists(api_file):
         print(f"[ERROR] 未找到 {api_file}，请创建并写入可用的 API Key（每行一条）。")
         input("按回车键退出...")

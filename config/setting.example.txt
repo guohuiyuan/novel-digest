@@ -1,0 +1,21 @@
+# OpenAI-compatible endpoint
+BASE_URL=https://api.deepseek.com
+MODEL_NAME=deepseek-chat
+MAX_WORKERS=6
+RPM_LIMIT=10
+TPM_LIMIT=100000
+
+# Per-chunk dimension re-pull (0-5)
+DIM_BOOST_MAX_PER_CHUNK=3
+
+# Rescan rounds after initial scan
+RESCAN_ROUNDS=3
+
+# Max extra middle-summary calls
+MAX_MIDDLE_SUMMARY_CALLS=10
+
+# Global rescan tuning
+RESCAN_MAX_HITS=4
+RESCAN_PRE_FILTER_THRESHOLD=1.0
+RESCAN_MAX_WINDOW=2000
+RESCAN_MAX_PROMPT_HEROINES=4

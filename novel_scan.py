@@ -15,7 +15,7 @@ try:
 except Exception:
     APIStatusError = Exception
 from tqdm import tqdm
-from Timerror import make_chat_completion
+from api_client import make_chat_completion
 from token_tracker import create_default_tracker
 from shared_utils import get_base_dir, read_file_safely
 from text_anchor import build_chunk_manifest, save_chunk_manifest
@@ -50,9 +50,9 @@ RESCAN_PRE_FILTER_THRESHOLD = float(os.environ.get("RESCAN_PRE_FILTER_THRESHOLD"
 RESCAN_MAX_WINDOW = int(os.environ.get("RESCAN_MAX_WINDOW", "2000"))
 RESCAN_MAX_PROMPT_HEROINES = int(os.environ.get("RESCAN_MAX_PROMPT_HEROINES", "4"))
 
-RULES_FILE = os.path.join(get_base_dir(), "rules2.json")
+RULES_FILE = os.path.join(get_base_dir(), "config", "rules.json")
 LEARNED_KEYWORDS_DIR = os.path.join(get_base_dir(), "results", "learned_keywords")
-SEED_FILE = os.path.join(LEARNED_KEYWORDS_DIR, "seed.json")
+SEED_FILE = os.path.join(get_base_dir(), "config", "seed_keywords.json")
 
 SNAPSHOT_LOCK = threading.Lock()
 DETAIL_FILE_LOCK = threading.Lock()
@@ -208,7 +208,7 @@ def _build_chunk_plan_metadata(text=None, chunks=None, chunk_size=None, overlap=
         "text_length": len(text or ""),
     }
 
-# ---- API 调用封装：统一收敛到 Timerror.py（只需修改 Timerror.py 即可全局生效）----
+# ---- API 调用封装：统一收敛到 api_client.py（只需修改 api_client.py 即可全局生效）----
 MAX_403_RETRIES = 3
 MAX_TIMEOUT_RETRIES = 3  # 连续超时 3 次则标记 key 不可用
 REQUEST_TIMEOUT = 120  # 请求超时时间（秒）
@@ -219,7 +219,7 @@ def _openai_client_factory(api_key: str, base_url: str, timeout: int):
     
     【关键】max_retries=0 关闭 SDK 自动重试：
     - SDK 默认会重试 2 次，每次都有 timeout
-    - 外层 Timerror.py 再重试 5 次
+    - 外层 api_client.py 再重试 5 次
     - 不关闭的话，总耗时可能达到 120s * 3 * 5 = 1800s
     
     【关键】使用 httpx.Timeout 细粒度配置：
