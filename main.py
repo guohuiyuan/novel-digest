@@ -363,7 +363,10 @@ def run():
     print_token_summary(base_dir)
 
     print()
-    input("所有任务完成，按回车键退出...")
+    try:
+        input("所有任务完成，按回车键退出...")
+    except EOFError:
+        pass
 
 
 if __name__ == "__main__":

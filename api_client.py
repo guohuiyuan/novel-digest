@@ -593,6 +593,13 @@ def make_chat_completion(
 
         # 计算动态 timeout
         max_tokens = kwargs.get("max_tokens")
+        # 结构化输出（response_format=json_object）若未显式给输出预算，推理模型会超长思考，
+        # 在该服务上表现为 200s 挂起。统一补一个默认输出上限，避免此类超时。
+        if max_tokens is None:
+            _rf = kwargs.get("response_format")
+            if isinstance(_rf, dict) and _rf.get("type") == "json_object":
+                max_tokens = 1200
+                kwargs["max_tokens"] = max_tokens
         input_chars = _calculate_input_chars(messages)
         dyn_timeout = compute_dynamic_timeout(
             base_timeout=cfg.request_timeout,

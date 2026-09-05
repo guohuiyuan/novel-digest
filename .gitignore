@@ -25,3 +25,5 @@ config/api.txt
 .vscode/
 .DS_Store
 Thumbs.db
+config/api.qwen35.bak
+config/setting.qwen35.bak

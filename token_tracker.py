@@ -143,7 +143,7 @@ class TokenTracker:
     def _lock_path(self) -> str:
         return f"{self.out_path}.lock"
 
-    def _acquire_file_lock(self, timeout_s: float = 5.0, poll_s: float = 0.05) -> bool:
+    def _acquire_file_lock(self, timeout_s: float = 5.0, poll_s: float = 0.05, stale_after_s: float = 120.0) -> bool:
         deadline = time.time() + float(timeout_s)
         lock_path = self._lock_path()
         while True:
@@ -155,11 +155,38 @@ class TokenTracker:
                     os.close(fd)
                 return True
             except FileExistsError:
+                # 自清理：锁文件超龄（持有者进程已死/残留）则视为僵死锁，删除后重试
+                if self._is_stale_lock(lock_path, stale_after_s):
+                    try:
+                        os.remove(lock_path)
+                    except Exception:
+                        pass
+                    continue
                 if time.time() >= deadline:
                     return False
                 time.sleep(poll_s)
             except Exception:
                 return False
+
+    @staticmethod
+    def _is_stale_lock(lock_path: str, stale_after_s: float) -> bool:
+        try:
+            with open(lock_path, "r", encoding="utf-8", errors="ignore") as _lf:
+                _lines = _lf.read().splitlines()
+        except FileNotFoundError:
+            return False
+        except Exception:
+            return True
+        if not _lines:
+            return True
+        if len(_lines) >= 2:
+            try:
+                _ts = datetime.fromisoformat(_lines[1].strip())
+                if (datetime.now() - _ts).total_seconds() > float(stale_after_s):
+                    return True
+            except Exception:
+                return True
+        return len(_lines) < 2
 
     def _release_file_lock(self) -> None:
         try:
